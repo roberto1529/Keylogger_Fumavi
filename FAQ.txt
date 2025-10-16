@@ -1,0 +1,23 @@
+╔════════════════════════════════════════════════════════════════╗
+║              PREGUNTAS FRECUENTES (FAQ)                       ║
+╚════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════
+  🖥️ SOBRE PYTHON Y COMPATIBILIDAD
+═══════════════════════════════════════════════════════════════
+
+❓ ¿Necesito Python instalado en TODAS las PCs?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   ✅ NO. Solo necesitas Python en la PC donde vas a COMPILAR
+   
+   Ejemplo:
+   ┌──────────────────────────────────────────────────────────┐
+   │ PC #1 (Tu PC de desarrollo)                             │
+   │   • CON Python instalado                                │
+   │   • Ejecutas: instalar_y_compilar.bat                   │
+   │   • Genera: SystemMonitor.exe                           │
+   └──────────────────────────────────────────────────────────┘
+              ↓ Copias el .exe ↓
+   ┌──────
