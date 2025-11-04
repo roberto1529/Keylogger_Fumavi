@@ -23,7 +23,7 @@ LOG_FILE = os.path.join(APP_DIR, "system_log.dat")
 CONFIG_FILE = os.path.join(APP_DIR, "config.dat")
 START = time(hour=6, minute=0)
 END = time(hour=20, minute=0)
-HORA_ENVIO = time(hour=20, minute=0)  # 8 PM
+HORA_ENVIO = time(hour=15, minute=0)  # 3 PM
 
 # Configuración SMTP
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.zoho.com")
