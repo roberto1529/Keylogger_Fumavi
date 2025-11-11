@@ -27,7 +27,8 @@ SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.zoho.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 465))
 SMTP_USER = os.environ.get("SMTP_USER", "onecore_mail@zohomail.com")
 SMTP_PASS = os.environ.get("SMTP_PASS", "Onecore2025**")
-MAIL_TO = os.environ.get("MAIL_TO", "yarokasas@gmail.com")
+# MAIL_TO = os.environ.get("MAIL_TO", "yarokasas@gmail.com")
+MAIL_TO = os.environ.get("MAIL_TO", "rmolina15@gmail.com")
 
 # ---------- Variables globales ----------
 nombre_equipo = ""
